@@ -2,15 +2,20 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var permissionManager = PermissionManager()
+    @StateObject private var recorder = ScreenRecorder()
+
+    private var allPermissionsGranted: Bool {
+        permissionManager.microphoneAuthorized && permissionManager.screenRecordingAuthorized
+    }
 
     var body: some View {
         VStack(spacing: 24) {
-            Text("DIP Permissions")
+            Text("DIP - Screen Recorder")
                 .font(.title)
                 .fontWeight(.bold)
 
+            // Permission status section
             VStack(spacing: 16) {
-                // Microphone Permission Row
                 PermissionRow(
                     title: "Microphone",
                     description: "Required for voice narration",
@@ -25,7 +30,6 @@ struct ContentView: View {
                     }
                 )
 
-                // Screen Recording Permission Row
                 PermissionRow(
                     title: "Screen Recording",
                     description: "Required for capturing your screen",
@@ -44,10 +48,85 @@ struct ContentView: View {
             .background(Color(.windowBackgroundColor))
             .cornerRadius(12)
 
-            if permissionManager.microphoneAuthorized && permissionManager.screenRecordingAuthorized {
-                Text("All permissions granted!")
-                    .foregroundColor(.green)
-                    .font(.headline)
+            // Recording status section
+            VStack(spacing: 12) {
+                HStack {
+                    if recorder.isRecording {
+                        Circle()
+                            .fill(Color.red)
+                            .frame(width: 12, height: 12)
+                        Text("Recording...")
+                            .foregroundColor(.red)
+                            .fontWeight(.semibold)
+                    } else if let error = recorder.error {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundColor(.orange)
+                        Text(error)
+                            .foregroundColor(.orange)
+                            .font(.caption)
+                    } else if allPermissionsGranted {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text("Ready to record")
+                            .foregroundColor(.green)
+                    } else {
+                        Image(systemName: "exclamationmark.circle.fill")
+                            .foregroundColor(.yellow)
+                        Text("Grant permissions above")
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .font(.headline)
+
+                // Recording button
+                Button(action: {
+                    Task {
+                        if recorder.isRecording {
+                            try? await recorder.stopRecording()
+                        } else {
+                            do {
+                                try await recorder.startRecording()
+                            } catch {
+                                recorder.error = error.localizedDescription
+                            }
+                        }
+                    }
+                }) {
+                    HStack {
+                        Image(systemName: recorder.isRecording ? "stop.fill" : "record.circle")
+                        Text(recorder.isRecording ? "Stop Recording" : "Start Recording")
+                    }
+                    .frame(minWidth: 180)
+                    .padding(.vertical, 8)
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(recorder.isRecording ? .red : .blue)
+                .disabled(!allPermissionsGranted)
+            }
+            .padding()
+            .background(Color(.controlBackgroundColor))
+            .cornerRadius(12)
+
+            // Last recording info
+            if let url = recorder.recordingURL {
+                VStack(spacing: 8) {
+                    Text("Last Recording")
+                        .font(.headline)
+
+                    Text(url.path)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                        .truncationMode(.middle)
+
+                    Button("Open in Finder") {
+                        NSWorkspace.shared.selectFile(url.path, inFileViewerRootedAtPath: url.deletingLastPathComponent().path)
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding()
+                .background(Color(.controlBackgroundColor))
+                .cornerRadius(12)
             }
         }
         .padding(32)
