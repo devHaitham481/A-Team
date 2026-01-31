@@ -3,6 +3,8 @@
 <plist version="1.0">
 <dict>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>DIP needs microphone access to record voice narration with your screen recording.</string>
+	<string>ScreenAssist benötigt Mikrofon-Zugriff um deine Fragen zu hören.</string>
+	<key>NSScreenCaptureUsageDescription</key>
+	<string>ScreenAssist benötigt Bildschirmaufnahme um zu sehen was du siehst.</string>
 </dict>
 </plist>
