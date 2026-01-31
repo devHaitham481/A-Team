@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <title>VisionFlow</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>VisionFlow</h1>
+    </header>
+
+    <main>
+      <div class="source-selector">
+        <select id="sourceSelect">
+          <option value="" disabled selected>Select screen/window...</option>
+          <option value="screen-1">Screen 1</option>
+          <option value="screen-2">Screen 2</option>
+          <option value="window-1">Application Window</option>
+        </select>
+      </div>
+
+      <div class="controls">
+        <button id="recordBtn" class="btn btn-record">
+          <span class="icon">&#9210;</span> Record
+        </button>
+        <button id="stopBtn" class="btn btn-stop" disabled>
+          <span class="icon">&#9209;</span> Stop
+        </button>
+      </div>
+
+      <div class="status">
+        Status: <span id="statusText">Ready</span>
+      </div>
+
+      <div class="options">
+        <label class="checkbox-label">
+          <input type="checkbox" id="processCheckbox" checked>
+          <span class="checkmark"></span>
+          Process before copy
+        </label>
+      </div>
+    </main>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
