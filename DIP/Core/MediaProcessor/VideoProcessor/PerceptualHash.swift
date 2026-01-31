@@ -100,21 +100,10 @@ struct PerceptualHash {
     }
 
     private static func applyDCT(pixels: [Float], width: Int, height: Int) -> [Float] {
-        var input = pixels
-        var output = [Float](repeating: 0, count: width * height)
-
-        // Use Accelerate's vDSP for DCT
-        let setup = vDSP_DCT_CreateSetup(nil, vDSP_Length(width * height), .II)
-        defer { vDSP_DCT_DestroySetup(setup) }
-
-        if let setup = setup {
-            vDSP_DCT_Execute(setup, &input, &output)
-        } else {
-            // Fallback: simple 2D DCT implementation
-            output = simpleDCT(pixels: pixels, width: width, height: height)
-        }
-
-        return output
+        // Use simple 2D DCT implementation
+        // Note: Accelerate's vDSP_DCT functions have compatibility issues,
+        // so we use a direct implementation which is sufficient for pHash
+        return simpleDCT(pixels: pixels, width: width, height: height)
     }
 
     private static func simpleDCT(pixels: [Float], width: Int, height: Int) -> [Float] {
