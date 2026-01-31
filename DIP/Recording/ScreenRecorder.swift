@@ -1,3 +1,4 @@
+import AppKit
 import AVFoundation
 @preconcurrency import ScreenCaptureKit
 import SwiftUI
@@ -26,6 +27,7 @@ final class ScreenRecorder: NSObject, ObservableObject {
     @Published var isRecording: Bool = false
     @Published var recordingURL: URL? = nil
     @Published var error: String? = nil
+    @Published var copiedToClipboard: Bool = false
 
     private var stream: SCStream?
     private var recordingOutput: SCRecordingOutput?
@@ -36,8 +38,9 @@ final class ScreenRecorder: NSObject, ObservableObject {
 
     /// Start recording screen and microphone to MP4 file
     func startRecording() async throws {
-        // Clear any previous error
+        // Clear any previous state
         error = nil
+        copiedToClipboard = false
 
         // 1. Get shareable content
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
@@ -111,6 +114,32 @@ final class ScreenRecorder: NSObject, ObservableObject {
         self.recordingOutput = nil
         isRecording = false
     }
+
+    /// Copy the recorded video file to clipboard for pasting into other apps
+    func copyVideoToClipboard() {
+        guard let url = recordingURL else {
+            print("[ScreenRecorder] No recording URL to copy")
+            return
+        }
+
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            print("[ScreenRecorder] Recording file does not exist at \(url.path)")
+            return
+        }
+
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+
+        // Write the file URL to pasteboard - this allows pasting the video file
+        let success = pasteboard.writeObjects([url as NSURL])
+
+        if success {
+            copiedToClipboard = true
+            print("[ScreenRecorder] Video copied to clipboard: \(url.lastPathComponent)")
+        } else {
+            print("[ScreenRecorder] Failed to copy video to clipboard")
+        }
+    }
 }
 
 // MARK: - SCRecordingOutputDelegate
@@ -130,5 +159,8 @@ extension ScreenRecorder: SCRecordingOutputDelegate {
 
     nonisolated func recordingOutputDidFinishRecording(_ recordingOutput: SCRecordingOutput) {
         print("[ScreenRecorder] Recording finished")
+        Task { @MainActor in
+            self.copyVideoToClipboard()
+        }
     }
 }

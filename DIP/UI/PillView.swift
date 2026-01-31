@@ -4,11 +4,41 @@ import SwiftUI
 struct PillView: View {
     @ObservedObject var recorder: ScreenRecorder
 
+    private var statusText: String {
+        if recorder.isRecording {
+            return "REC"
+        } else if recorder.copiedToClipboard {
+            return "Copied!"
+        } else {
+            return "Ready"
+        }
+    }
+
+    private var indicatorColor: Color {
+        if recorder.isRecording {
+            return .red
+        } else if recorder.copiedToClipboard {
+            return .green
+        } else {
+            return .gray
+        }
+    }
+
+    private var backgroundColor: Color {
+        if recorder.isRecording {
+            return Color.red.opacity(0.9)
+        } else if recorder.copiedToClipboard {
+            return Color.green.opacity(0.8)
+        } else {
+            return Color.black.opacity(0.8)
+        }
+    }
+
     var body: some View {
         HStack(spacing: 8) {
             // Status indicator circle
             Circle()
-                .fill(recorder.isRecording ? Color.red : Color.gray)
+                .fill(indicatorColor)
                 .frame(width: 8, height: 8)
                 .overlay {
                     if recorder.isRecording {
@@ -20,7 +50,7 @@ struct PillView: View {
                 }
 
             // Status text
-            Text(recorder.isRecording ? "REC" : "Ready")
+            Text(statusText)
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundColor(.white)
         }
@@ -28,12 +58,13 @@ struct PillView: View {
         .padding(.vertical, 10)
         .background(
             Capsule()
-                .fill(recorder.isRecording ? Color.red.opacity(0.9) : Color.black.opacity(0.8))
+                .fill(backgroundColor)
         )
         .clipShape(Capsule())
         .onTapGesture {
             toggleRecording()
         }
+        .animation(.easeInOut(duration: 0.2), value: recorder.copiedToClipboard)
     }
 
     private func toggleRecording() {
