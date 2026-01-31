@@ -5,7 +5,7 @@
 import Foundation
 
 /// Metadata about a processed recording
-struct RecordingMetadata {
+struct RecordingMetadata: Sendable {
     /// Total duration of the original recording in seconds
     let duration: Double
 

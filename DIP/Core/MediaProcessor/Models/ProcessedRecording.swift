@@ -7,7 +7,7 @@
 import Foundation
 
 /// The processed output from a screen recording
-struct ProcessedRecording {
+struct ProcessedRecording: Sendable {
     /// Selected key frames with anchored transcript segments (3-10 frames)
     let frames: [AnnotatedFrame]
 

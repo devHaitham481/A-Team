@@ -6,7 +6,7 @@
 import Foundation
 
 /// A segment of transcribed speech with start and end times
-struct TranscriptSegment {
+struct TranscriptSegment: Sendable {
     /// The transcribed text for this segment
     let text: String
 

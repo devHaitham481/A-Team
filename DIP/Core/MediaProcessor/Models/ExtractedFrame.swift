@@ -6,7 +6,7 @@
 import AppKit
 
 /// A frame extracted from video at a specific timestamp
-struct ExtractedFrame {
+struct ExtractedFrame: @unchecked Sendable {
     /// The frame image
     let image: NSImage
 

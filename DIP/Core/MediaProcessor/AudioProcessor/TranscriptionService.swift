@@ -12,7 +12,7 @@
 import Foundation
 
 /// Result of transcription with timing information
-struct TranscriptionResult {
+struct TranscriptionResult: Sendable {
     /// The full transcript text
     let fullText: String
 

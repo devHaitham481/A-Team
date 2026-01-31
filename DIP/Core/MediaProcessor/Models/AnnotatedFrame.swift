@@ -7,7 +7,7 @@
 import AppKit
 
 /// A selected key frame with anchored transcript
-struct AnnotatedFrame {
+struct AnnotatedFrame: @unchecked Sendable {
     /// The frame image
     let image: NSImage
 
