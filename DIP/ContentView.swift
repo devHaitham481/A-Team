@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var permissionManager = PermissionManager()
-    @StateObject private var recorder = ScreenRecorder()
+    @ObservedObject var recorder: ScreenRecorder
 
     private var allPermissionsGranted: Bool {
         permissionManager.microphoneAuthorized && permissionManager.screenRecordingAuthorized
@@ -185,5 +185,5 @@ struct PermissionRow: View {
 }
 
 #Preview {
-    ContentView()
+    ContentView(recorder: ScreenRecorder())
 }
