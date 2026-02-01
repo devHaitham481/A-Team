@@ -4,3 +4,5 @@ mss
 Pillow
 pynput
 python-dotenv
+fastapi
+uvicorn[standard]
