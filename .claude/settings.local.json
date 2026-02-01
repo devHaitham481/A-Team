@@ -14,7 +14,9 @@
       "Bash(git fetch:*)",
       "Bash(git merge:*)",
       "Bash(pip3 install:*)",
-      "Bash(brew install:*)"
+      "Bash(brew install:*)",
+      "Bash(git stash:*)",
+      "Bash(git pull:*)"
     ]
   }
 }
