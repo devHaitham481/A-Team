@@ -10,6 +10,7 @@ export interface SourceInfo {
 
 export interface VisionFlowAPI {
   getSources: () => Promise<SourceInfo[]>;
+  setSource: (sourceId: string) => Promise<boolean>;
   saveRecording: (buffer: ArrayBuffer) => Promise<string>;
 }
 

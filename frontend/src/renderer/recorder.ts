@@ -16,23 +16,41 @@ export class ScreenRecorder {
    */
   async startRecording(sourceId: string): Promise<void> {
     try {
-      // Get screen stream using the source ID from desktopCapturer
-      this.screenStream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: {
-          // @ts-ignore - Electron-specific constraints
-          mandatory: {
-            chromeMediaSource: 'desktop',
-            chromeMediaSourceId: sourceId,
-          }
-        }
-      });
+      console.log('Starting recording with sourceId:', sourceId);
+
+      // Tell main process which source we want
+      console.log('Setting source in main process...');
+      await window.visionflow.setSource(sourceId);
+
+      // Get screen stream using getDisplayMedia (intercepted by main process handler)
+      console.log('Requesting screen stream via getDisplayMedia...');
+      try {
+        const displayMediaPromise = navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: false
+        });
+
+        // Add timeout to detect if promise never resolves
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('getDisplayMedia timed out after 10s')), 10000);
+        });
+
+        this.screenStream = await Promise.race([displayMediaPromise, timeoutPromise]);
+        console.log('Screen stream obtained:', this.screenStream.getVideoTracks().length, 'video tracks');
+      } catch (displayError) {
+        console.error('getDisplayMedia failed:', displayError);
+        console.error('Error type:', (displayError as Error).name);
+        console.error('Error message:', (displayError as Error).message);
+        throw displayError;
+      }
 
       // Get microphone stream
+      console.log('Requesting microphone stream...');
       this.micStream = await navigator.mediaDevices.getUserMedia({
         audio: true,
         video: false
       });
+      console.log('Microphone stream obtained:', this.micStream.getAudioTracks().length, 'audio tracks');
 
       // Combine video from screen and audio from microphone
       const combinedStream = new MediaStream([
@@ -58,6 +76,9 @@ export class ScreenRecorder {
 
       console.log('Recording started');
     } catch (error) {
+      console.error('Recording error:', error);
+      console.error('Error name:', (error as Error).name);
+      console.error('Error message:', (error as Error).message);
       this.cleanup();
       throw error;
     }
