@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pgrep:*)",
+      "Bash(npm start)",
+      "Bash(npm install:*)",
+      "Bash(pbpaste:*)",
+      "Bash(osascript:*)",
+      "Bash(pkill:*)"
+    ]
+  }
+}

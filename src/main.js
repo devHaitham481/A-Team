@@ -2,6 +2,7 @@ require('dotenv').config();
 const { app, BrowserWindow, screen, globalShortcut, ipcMain, desktopCapturer, clipboard } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { execSync } = require('child_process');
 const { transcribeAudio } = require('./gemini');
 
 let mainWindow = null;
@@ -158,10 +159,15 @@ function setupIpcHandlers() {
       fs.writeFileSync(filepath, buffer);
       console.log('Video saved to:', filepath);
 
-      // Copy file to clipboard (macOS file URL format)
-      const fileUrl = `file://${filepath}`;
-      clipboard.writeBuffer('public.file-url', Buffer.from(fileUrl));
-      console.log('Video copied to clipboard');
+      // Copy file to clipboard using AppleScript (reliable macOS method)
+      if (process.platform === 'darwin') {
+        try {
+          execSync(`osascript -e 'set the clipboard to POSIX file "${filepath}"'`);
+          console.log('Video copied to clipboard');
+        } catch (clipErr) {
+          console.error('Clipboard copy failed:', clipErr);
+        }
+      }
 
       return { success: true, filepath };
     } catch (error) {

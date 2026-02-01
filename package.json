@@ -11,7 +11,7 @@
     "prompt:4": "cp prompts/4-ai-ready-context.txt prompt.txt && echo 'Switched to: AI-Ready Context'"
   },
   "devDependencies": {
-    "electron": "^34.0.0"
+    "electron": "^34.5.8"
   },
   "dependencies": {
     "@google/genai": "^1.39.0",
