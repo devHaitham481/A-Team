@@ -14,8 +14,12 @@ const responseText = document.getElementById('responseText');
 function parseMarkdown(text) {
   if (!text) return '';
 
+  // Normalize line endings and trim each line's leading/trailing whitespace
+  let lines = text.split('\n').map(line => line.trim()).filter(line => line !== '');
+  let normalized = lines.join('\n');
+
   // Escape HTML to prevent XSS
-  let html = text
+  let html = normalized
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
@@ -35,35 +39,33 @@ function parseMarkdown(text) {
   html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   html = html.replace(/__([^_]+)__/g, '<strong>$1</strong>');
 
-  // Italic (*text* or _text_) - but not inside words
-  html = html.replace(/(?<![\\w])\*([^*]+)\*(?![\\w])/g, '<em>$1</em>');
-  html = html.replace(/(?<![\\w])_([^_]+)_(?![\\w])/g, '<em>$1</em>');
-
   // Links [text](url)
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
 
   // Numbered lists (1. 2. 3.)
-  html = html.replace(/^(\d+)\. (.+)$/gm, '<li class="numbered">$2</li>');
+  html = html.replace(/^(\d+)\.\s+(.+)$/gm, '<li>$2</li>');
 
-  // Bullet lists (- or *)
-  html = html.replace(/^[-*] (.+)$/gm, '<li>$1</li>');
+  // Bullet lists (- or *) - must be at start of line
+  html = html.replace(/^[-*]\s+(.+)$/gm, '<li>$1</li>');
 
-  // Wrap consecutive <li> elements in <ul> or <ol>
-  html = html.replace(/(<li class="numbered">[\s\S]*?<\/li>)(\n(?!<li)|\n?$)/g, '<ol>$1</ol>$2');
-  html = html.replace(/(<li>[\s\S]*?<\/li>)(\n(?!<li)|\n?$)/g, '<ul>$1</ul>$2');
+  // Wrap consecutive <li> elements in <ul>
+  html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
 
-  // Clean up nested list issues
-  html = html.replace(/<\/ol>\n<ol>/g, '\n');
-  html = html.replace(/<\/ul>\n<ul>/g, '\n');
-  html = html.replace(/<li class="numbered">/g, '<li>');
+  // Clean up: remove newlines inside <ul> tags
+  html = html.replace(/<ul>([\s\S]*?)<\/ul>/g, (match, content) => {
+    return '<ul>' + content.replace(/\n/g, '') + '</ul>';
+  });
 
-  // Only convert double line breaks to paragraph breaks (not single)
-  html = html.replace(/\n\n+/g, '<br><br>');
+  // Convert remaining newlines to spaces (flow text naturally)
+  html = html.replace(/\n/g, ' ');
 
-  // Remove single line breaks (let text flow naturally)
-  html = html.replace(/([^>])\n([^<])/g, '$1 $2');
+  // Clean up multiple spaces
+  html = html.replace(/\s+/g, ' ');
 
-  return html;
+  // Add breaks between major sections (after </ul>, </h1>, etc.)
+  html = html.replace(/(<\/ul>|<\/ol>|<\/h[1-3]>|<\/pre>)\s*/g, '$1<br>');
+
+  return html.trim();
 }
 
 // Close button handler
