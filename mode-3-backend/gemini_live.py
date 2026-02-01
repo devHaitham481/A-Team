@@ -161,9 +161,19 @@ class GeminiLiveClient:
         self._audio_drop_count = 0
         self._screen_drop_count = 0
 
+        # Track when model is responding (to avoid sending frames during response)
+        self._model_is_responding = False
+
+        # Track active user turn (for frame gating)
+        self._user_turn_active: bool = False  # True from unmute until mute or model responds
+
         # Hotkey listener
         self._hotkey_listener = None
         self._loop = None
+
+        # Debounce for toggle mode (prevent key repeat)
+        self._last_toggle_time: float = 0
+        self._toggle_debounce_ms: float = 300  # Minimum 300ms between toggles
 
     @property
     def muted(self):
@@ -205,6 +215,7 @@ class GeminiLiveClient:
             self._clear_audio_queue()
             self._clear_video_queue()
             self._muted.clear()
+            self._user_turn_active = True  # Start user turn - allow frames
             self._current_turn_id = str(uuid.uuid4())[:8]
             self._audio_chunks_sent_this_turn = 0
             logger.info(f"🎙️ Turn gestartet: {self._current_turn_id}")
@@ -212,6 +223,7 @@ class GeminiLiveClient:
         else:
             # Mute: NICHT Queue leeren - restliches Audio muss gesendet werden
             self._muted.set()
+            self._user_turn_active = False  # End user turn - stop frames
             chunks_sent = self._audio_chunks_sent_this_turn
 
             if self._current_turn_id and chunks_sent > 0:
@@ -241,6 +253,7 @@ class GeminiLiveClient:
         self._clear_audio_queue()
         self._clear_video_queue()
         self._ptt_active.set()
+        self._user_turn_active = True  # Start user turn - allow frames
         self._current_turn_id = str(uuid.uuid4())[:8]
         self._audio_chunks_sent_this_turn = 0  # Reset Zähler
         logger.info(f"🎤 PTT aktiviert - Turn {self._current_turn_id}")
@@ -252,6 +265,7 @@ class GeminiLiveClient:
             return
 
         self._ptt_active.clear()
+        self._user_turn_active = False  # End user turn - stop frames
         # WICHTIG: Audio-Queue NICHT leeren!
         # Die restlichen Chunks müssen noch gesendet werden.
 
@@ -294,9 +308,14 @@ class GeminiLiveClient:
                 if key == keyboard.Key.f9:
                     self._on_ptt_press()
             else:
-                # Toggle Mode: F9 = umschalten
+                # Toggle Mode: F9 = umschalten (with debounce)
                 if key == keyboard.Key.f9:
-                    self.toggle_mute()
+                    now = time.time() * 1000
+                    if now - self._last_toggle_time >= self._toggle_debounce_ms:
+                        self._last_toggle_time = now
+                        self.toggle_mute()
+                    else:
+                        logger.debug(f"Toggle debounced (too fast)")
 
             if key == keyboard.Key.f10:
                 self.request_shutdown()
@@ -576,11 +595,14 @@ class GeminiLiveClient:
                     break
 
             # Screen-Frames senden (niedrigere Priorität)
-            # Option: Nur während aktivem Turn senden, um Kontext-Pollution zu vermeiden
-            should_send_screen = True
+            # Only send frames during active user turn (unmute -> mute)
+            should_send_screen = False
             if SCREEN_SEND_ONLY_DURING_TURN:
-                # Nur senden wenn User gerade spricht (nicht gemutet)
-                should_send_screen = not self.muted
+                # Only send frames during active user turn AND model not responding
+                should_send_screen = self._user_turn_active and not self._model_is_responding
+            else:
+                # If not gating by turn, just check model not responding
+                should_send_screen = not self._model_is_responding
 
             if not self.video_queue_in.empty():
                 try:
@@ -640,6 +662,10 @@ class GeminiLiveClient:
                                f"turn_complete={getattr(sc, 'turn_complete', 'N/A')}")
 
                     if sc.model_turn is not None:
+                        # Model is actively responding - stop user turn and frames
+                        self._model_is_responding = True
+                        self._user_turn_active = False  # Stop sending frames when model responds
+
                         # Response-Latenz messen
                         if self._last_turn_end_time > 0:
                             response_latency = (time.time() - self._last_turn_end_time) * 1000
@@ -657,6 +683,7 @@ class GeminiLiveClient:
 
                     if getattr(sc, 'turn_complete', False):
                         logger.info(f"✅ Model Turn abgeschlossen")
+                        self._model_is_responding = False
                         self._last_turn_end_time = 0
 
             except asyncio.CancelledError:
@@ -715,22 +742,25 @@ class GeminiLiveClient:
             ),
             system_instruction=Content(parts=[Part(text="""You are a helpful and patient digital guide for users unfamiliar with software.
 
-CRITICAL RULE - SCREEN CONTEXT:
-- You receive a continuous stream of screen captures.
-- ALWAYS describe and reference ONLY the MOST RECENT screen image you received.
-- NEVER reference or describe older screens from earlier in the conversation.
-- If the screen has changed, immediately focus on the NEW content only.
-- Treat each new screen capture as the CURRENT state - previous captures are outdated and irrelevant.
+CRITICAL RULES:
+1. ONLY respond when the user speaks to you. NEVER speak unprompted.
+2. Do NOT describe or narrate what you see on screen unless the user asks.
+3. Wait for the user's question or request before responding.
+4. Keep responses concise and focused on what the user asked.
 
-Your task:
-1. Observe ONLY the most recent screen to understand current context.
-2. Listen to the user's voice to understand their goal.
-3. Provide clear, step-by-step verbal instructions based on what you see RIGHT NOW.
+SCREEN CONTEXT:
+- You receive screen captures to understand context.
+- Use the MOST RECENT screen image only.
+- Reference the screen ONLY when answering user questions about it.
+
+When the user asks for help:
+1. Listen to understand their goal.
+2. Look at the current screen to provide relevant guidance.
+3. Give clear, step-by-step verbal instructions.
 4. Be specific about location and color (e.g., 'Click the orange Buy Now button on the right').
-5. If the user asks about something not visible on the CURRENT screen, say so.
-6. Maintain a calm, encouraging, and polite tone.
+5. Maintain a calm, encouraging tone.
 
-Remember: The screen you see is a LIVE feed. Only the latest frame matters.""")])
+IMPORTANT: Stay silent until the user speaks. Do not volunteer observations about the screen.""")])
         )
 
         reconnect_count = 0
@@ -759,6 +789,8 @@ Remember: The screen you see is a LIVE feed. Only the latest frame matters.""")]
                     self._current_turn_id = None
                     self._ptt_active.clear()
                     self._muted.set()  # Startet gemutet
+                    self._user_turn_active = False  # No active turn at start
+                    self._model_is_responding = False
                     self._turn_end_requested.clear()
                     self._silence_chunks_to_send = 0
                     self._audio_chunks_sent_this_turn = 0
