@@ -13,6 +13,7 @@ import {
 let isRecording = false;
 let isLive = false;
 let isAskAI = false;
+let isReplying = false;
 let lastRecordingBlob = null;
 
 // DOM element references
@@ -100,6 +101,16 @@ function setupIPCListeners() {
     // Listen for toggle-askai command from main process (via hotkey)
     window.electronAPI.receive('toggle-askai', () => {
       toggleAskAI();
+    });
+
+    // Listen for start-reply command from overlay
+    window.electronAPI.receive('start-reply', () => {
+      startReply();
+    });
+
+    // Listen for stop-reply command from overlay
+    window.electronAPI.receive('stop-reply', () => {
+      stopReply();
     });
   } else {
     console.log('electronAPI not available - IPC listeners not set up');
@@ -456,6 +467,87 @@ async function stopAskAI() {
   } catch (error) {
     console.error('Failed to stop Ask AI recording:', error);
     setAskAILoadingState(false);
+    await window.electronAPI.showOverlay({ loading: false, error: error.message });
+  }
+}
+
+/**
+ * Start reply recording (triggered from overlay)
+ */
+async function startReply() {
+  console.log('Starting reply recording...');
+
+  // Stop other modes if active
+  if (isRecording) {
+    await captureStopRecording();
+    isRecording = false;
+    updateButtonState(recordButton, false);
+  }
+  if (isLive) {
+    stopLive();
+    isLive = false;
+    updateButtonState(liveButton, false);
+  }
+  if (isAskAI) {
+    // Don't stop - just note we're in reply mode now
+    isAskAI = false;
+    updateButtonState(askaiButton, false);
+  }
+
+  try {
+    await captureStartRecording();
+    isReplying = true;
+    // Notify overlay that recording has started
+    window.electronAPI.replyStateChange({ recording: true });
+    console.log('Reply recording started successfully');
+  } catch (error) {
+    console.error('Failed to start reply recording:', error);
+    window.electronAPI.replyStateChange({ recording: false, error: error.message });
+  }
+}
+
+/**
+ * Stop reply recording and send with context
+ */
+async function stopReply() {
+  if (!isReplying) {
+    console.log('Not in reply mode, ignoring stop');
+    return;
+  }
+
+  console.log('Stopping reply recording...');
+  try {
+    const blob = await captureStopRecording();
+    isReplying = false;
+    console.log('Reply recording stopped, blob size:', blob.size);
+
+    // Notify overlay that we're processing
+    window.electronAPI.replyStateChange({ recording: false, loading: true });
+
+    // Show loading in overlay
+    await window.electronAPI.showOverlay({ loading: true });
+
+    // Convert blob to base64 and send to Gemini with context
+    console.log('Sending reply to Gemini with context...');
+    const base64Data = await blobToBase64(blob);
+    const mimeType = blob.type.split(';')[0];
+    const result = await window.electronAPI.transcribeWithContext(base64Data, mimeType);
+
+    // Notify overlay loading complete
+    window.electronAPI.replyStateChange({ recording: false, loading: false });
+
+    if (result.success) {
+      console.log('Gemini reply response:', result.text);
+      // Update overlay with response
+      await window.electronAPI.showOverlay({ loading: false, text: result.text });
+    } else {
+      console.error('Gemini reply failed:', result.error);
+      await window.electronAPI.showOverlay({ loading: false, error: result.error });
+    }
+  } catch (error) {
+    console.error('Failed to stop reply recording:', error);
+    isReplying = false;
+    window.electronAPI.replyStateChange({ recording: false, loading: false, error: error.message });
     await window.electronAPI.showOverlay({ loading: false, error: error.message });
   }
 }

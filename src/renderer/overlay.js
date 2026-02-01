@@ -6,6 +6,11 @@
 const closeBtn = document.getElementById('closeBtn');
 const loadingState = document.getElementById('loadingState');
 const responseText = document.getElementById('responseText');
+const replyBtn = document.getElementById('replyBtn');
+
+// Reply state
+let isRecording = false;
+let isLoading = false;
 
 /**
  * Simple markdown parser for common formatting
@@ -79,15 +84,69 @@ closeBtn.addEventListener('click', () => {
   }
 });
 
+// Reply button handler
+if (replyBtn) {
+  replyBtn.addEventListener('click', () => {
+    if (isLoading) return; // Ignore clicks while loading
+
+    if (isRecording) {
+      // Stop recording
+      if (window.electronAPI && window.electronAPI.stopReply) {
+        window.electronAPI.stopReply();
+      }
+    } else {
+      // Start recording
+      if (window.electronAPI && window.electronAPI.startReply) {
+        window.electronAPI.startReply();
+      }
+    }
+  });
+}
+
+// Listen for reply state changes
+if (window.electronAPI && window.electronAPI.onReplyStateChange) {
+  window.electronAPI.onReplyStateChange((state) => {
+    isRecording = state.recording || false;
+    isLoading = state.loading || false;
+
+    if (replyBtn) {
+      // Update button appearance based on state
+      replyBtn.classList.toggle('recording', isRecording);
+      replyBtn.classList.toggle('loading', isLoading);
+      replyBtn.disabled = isLoading;
+
+      // Update tooltip
+      if (isLoading) {
+        replyBtn.title = 'Processing...';
+      } else if (isRecording) {
+        replyBtn.title = 'Stop recording';
+      } else {
+        replyBtn.title = 'Reply';
+      }
+    }
+  });
+}
+
 // Listen for content updates from main process
 if (window.electronAPI && window.electronAPI.onOverlayContent) {
   window.electronAPI.onOverlayContent((data) => {
     if (data.loading) {
       loadingState.classList.remove('hidden');
       responseText.classList.add('hidden');
+      // Disable reply button during loading
+      if (replyBtn) replyBtn.disabled = true;
     } else {
       loadingState.classList.add('hidden');
       responseText.classList.remove('hidden');
+
+      // Reset reply button state
+      isRecording = false;
+      isLoading = false;
+      if (replyBtn) {
+        replyBtn.classList.remove('recording', 'loading');
+        replyBtn.disabled = false;
+        replyBtn.title = 'Reply';
+      }
 
       if (data.error) {
         responseText.classList.add('error');

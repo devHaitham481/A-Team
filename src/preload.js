@@ -14,7 +14,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Receive messages from main process
   receive: (channel, callback) => {
-    const validChannels = ['fromMain', 'toggle-record', 'toggle-live', 'toggle-askai'];
+    const validChannels = ['fromMain', 'toggle-record', 'toggle-live', 'toggle-askai', 'start-reply', 'stop-reply'];
     if (validChannels.includes(channel)) {
       // Deliberately strip event as it includes `sender`
       ipcRenderer.on(channel, (event, ...args) => callback(...args));
@@ -45,6 +45,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Transcribe audio/video via Gemini
   transcribe: (base64Data, mimeType) => ipcRenderer.invoke('transcribe', { base64Data, mimeType }),
+
+  // Transcribe with conversation context (for reply mode)
+  transcribeWithContext: (base64Data, mimeType) => ipcRenderer.invoke('transcribe-with-context', { base64Data, mimeType }),
+
+  // Notify overlay of reply state changes
+  replyStateChange: (state) => ipcRenderer.send('reply-state-change', state),
 
   // Copy text to clipboard
   copyToClipboard: (text) => ipcRenderer.invoke('copy-to-clipboard', text),

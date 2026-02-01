@@ -51,6 +51,13 @@ html, body {
   letter-spacing: 0.5px;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  -webkit-app-region: no-drag;
+}
+
 .close-button {
   width: 24px;
   height: 24px;
@@ -62,12 +69,94 @@ html, body {
   line-height: 1;
   cursor: pointer;
   transition: all 0.2s ease;
-  -webkit-app-region: no-drag;
 }
 
 .close-button:hover {
   background: rgba(255, 80, 80, 0.8);
   color: rgba(255, 255, 255, 0.95);
+}
+
+/* Compact Reply button - Apple notification style */
+.reply-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.reply-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.reply-button:active {
+  transform: scale(0.95);
+}
+
+.reply-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.reply-button .reply-icon,
+.reply-button .stop-icon {
+  width: 14px;
+  height: 14px;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+/* Default: show reply arrow, hide stop */
+.reply-button .reply-icon {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.reply-button .stop-icon {
+  display: none;
+}
+
+/* Recording state: show stop, hide reply */
+.reply-button.recording .reply-icon {
+  display: none;
+}
+
+.reply-button.recording .stop-icon {
+  display: block;
+  opacity: 1;
+}
+
+.reply-button.recording {
+  background: rgba(220, 80, 80, 0.9);
+  color: rgba(255, 255, 255, 0.95);
+  animation: pulse-subtle 1.5s ease-in-out infinite;
+}
+
+.reply-button.recording:hover {
+  background: rgba(240, 100, 100, 0.95);
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(220, 80, 80, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(220, 80, 80, 0.3);
+  }
+}
+
+/* Loading state */
+.reply-button.loading {
+  opacity: 0.5;
+  cursor: wait;
 }
 
 /* Content area */

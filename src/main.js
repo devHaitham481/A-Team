@@ -3,7 +3,7 @@ const { app, BrowserWindow, screen, globalShortcut, ipcMain, desktopCapturer, cl
 const path = require('path');
 const fs = require('fs');
 const { execSync, spawn } = require('child_process');
-const { transcribeAudio } = require('./gemini');
+const { transcribeAudio, transcribeWithContext } = require('./gemini');
 
 // Gemini Live API server process
 let geminiLiveProcess = null;
@@ -13,6 +13,11 @@ const GEMINI_LIVE_API_URL = `http://localhost:${GEMINI_LIVE_API_PORT}`;
 let mainWindow = null;
 let overlayWindow = null;
 let tray = null;
+
+// Conversation context for reply functionality - cleared when overlay closes
+let conversationContext = {
+  lastResponse: null
+};
 
 function createWindow() {
   // Get primary display dimensions for positioning
@@ -120,12 +125,14 @@ function showOverlay(data) {
   overlay.show();
 }
 
-// Close overlay window
+// Close overlay window and clear conversation context
 function closeOverlay() {
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.close();
     overlayWindow = null;
   }
+  // Clear conversation context when overlay is closed
+  conversationContext.lastResponse = null;
 }
 
 // Start the Gemini Live API server
@@ -319,10 +326,58 @@ function setupIpcHandlers() {
       console.log('Base64 data length:', base64Data?.length);
       console.log('Base64 data preview:', base64Data?.substring(0, 100));
       const text = await transcribeAudio(base64Data, mimeType);
+      // Store response for potential reply
+      conversationContext.lastResponse = text;
       return { success: true, text };
     } catch (error) {
       console.error('Transcription error:', error);
       return { success: false, error: error.message };
+    }
+  });
+
+  // Handler for transcribing with conversation context (reply mode)
+  ipcMain.handle('transcribe-with-context', async (event, { base64Data, mimeType }) => {
+    try {
+      console.log('Transcribe with context called');
+      console.log('Previous context length:', conversationContext.lastResponse?.length);
+
+      let text;
+      if (conversationContext.lastResponse) {
+        text = await transcribeWithContext(base64Data, mimeType, conversationContext.lastResponse);
+      } else {
+        // Fallback to regular transcribe if no context
+        text = await transcribeAudio(base64Data, mimeType);
+      }
+
+      // Update context with new response
+      conversationContext.lastResponse = text;
+      return { success: true, text };
+    } catch (error) {
+      console.error('Transcription with context error:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Handler for starting reply recording (triggered from overlay)
+  ipcMain.on('start-reply', () => {
+    console.log('Start reply requested from overlay');
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('start-reply');
+    }
+  });
+
+  // Handler for stopping reply recording (triggered from overlay)
+  ipcMain.on('stop-reply', () => {
+    console.log('Stop reply requested from overlay');
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('stop-reply');
+    }
+  });
+
+  // Handler for updating overlay with reply state
+  ipcMain.on('reply-state-change', (event, state) => {
+    if (overlayWindow && !overlayWindow.isDestroyed()) {
+      overlayWindow.webContents.send('reply-state-change', state);
     }
   });
 

@@ -11,7 +11,17 @@
   <div class="overlay-container">
     <div class="overlay-header">
       <span class="overlay-title">AI Response</span>
-      <button class="close-button" id="closeBtn">&times;</button>
+      <div class="header-actions">
+        <button class="reply-button" id="replyBtn" title="Reply">
+          <svg class="reply-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M10 9V5l-7 7 7 7v-4.1c5 0 8.5 1.6 11 5.1-1-5-4-10-11-11z"/>
+          </svg>
+          <svg class="stop-icon" viewBox="0 0 24 24" fill="currentColor">
+            <rect x="6" y="6" width="12" height="12" rx="2"/>
+          </svg>
+        </button>
+        <button class="close-button" id="closeBtn">&times;</button>
+      </div>
     </div>
     <div class="overlay-content" id="content">
       <div class="loading-state" id="loadingState">

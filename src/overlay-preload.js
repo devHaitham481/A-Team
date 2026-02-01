@@ -8,5 +8,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Listen for content updates
   onOverlayContent: (callback) => {
     ipcRenderer.on('overlay-content', (event, data) => callback(data));
+  },
+
+  // Start reply recording
+  startReply: () => ipcRenderer.send('start-reply'),
+
+  // Stop reply recording
+  stopReply: () => ipcRenderer.send('stop-reply'),
+
+  // Listen for reply state changes
+  onReplyStateChange: (callback) => {
+    ipcRenderer.on('reply-state-change', (event, state) => callback(state));
   }
 });

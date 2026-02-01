@@ -56,4 +56,43 @@ async function transcribeAudio(base64Data, mimeType) {
   return response.text;
 }
 
-module.exports = { transcribeAudio };
+/**
+ * Transcribe audio/video with conversation context
+ * @param {string} base64Data - Base64 encoded audio/video data
+ * @param {string} mimeType - MIME type (e.g., 'audio/webm', 'video/webm')
+ * @param {string} previousResponse - The previous AI response for context
+ * @returns {Promise<string>} The transcription text
+ */
+async function transcribeWithContext(base64Data, mimeType, previousResponse) {
+  const client = getClient();
+
+  const contextPrompt = `${getPrompt()}
+
+Previous AI response for context:
+"""
+${previousResponse}
+"""
+
+The user is now following up with additional questions or requests. Answer based on both the previous context and their new input.`;
+
+  const response = await client.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: [
+      {
+        parts: [
+          { text: contextPrompt },
+          {
+            inlineData: {
+              mimeType: mimeType,
+              data: base64Data
+            }
+          }
+        ]
+      }
+    ]
+  });
+
+  return response.text;
+}
+
+module.exports = { transcribeAudio, transcribeWithContext };
