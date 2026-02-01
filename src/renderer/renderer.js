@@ -231,14 +231,25 @@ async function stopRecording() {
     lastRecordingBlob = blob;
     console.log('Recording stopped, blob size:', blob.size);
 
-    // Show loading state
+    // Save video and copy to clipboard immediately for easy attachment to LLMs
+    const arrayBuffer = await blob.arrayBuffer();
+    const mimeType = blob.type.split(';')[0];
+    const saveResult = await window.electronAPI.saveAndCopyVideo(
+      Array.from(new Uint8Array(arrayBuffer)),
+      mimeType
+    );
+    if (saveResult.success) {
+      console.log('Video saved and copied to clipboard:', saveResult.filepath);
+    } else {
+      console.error('Failed to save video:', saveResult.error);
+    }
+
+    // Show loading state for transcription
     setLoadingState(true);
 
     // Convert blob to base64 and send to Gemini
     console.log('Transcribing with Gemini...');
     const base64Data = await blobToBase64(blob);
-    // Strip codec info from MIME type (e.g., "video/webm;codecs=vp9" -> "video/webm")
-    const mimeType = blob.type.split(';')[0];
     const result = await window.electronAPI.transcribe(base64Data, mimeType);
 
     // Hide loading state
@@ -246,13 +257,13 @@ async function stopRecording() {
 
     if (result.success) {
       console.log('Transcription:', result.text);
-      // Copy to clipboard
-      await window.electronAPI.copyToClipboard(result.text);
-      console.log('Copied to clipboard!');
+      // Video remains in clipboard for LLM attachment
       // Show success animation
       showSuccess();
     } else {
       console.error('Transcription failed:', result.error);
+      // Still show success since video was saved and copied
+      showSuccess();
     }
   } catch (error) {
     console.error('Failed to stop recording:', error);

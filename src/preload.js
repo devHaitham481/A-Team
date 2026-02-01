@@ -48,4 +48,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Copy text to clipboard
   copyToClipboard: (text) => ipcRenderer.invoke('copy-to-clipboard', text),
+
+  // Save video and copy to clipboard
+  saveAndCopyVideo: (data, mimeType) => ipcRenderer.invoke('save-and-copy-video', { data, mimeType }),
 });

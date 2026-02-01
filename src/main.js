@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { app, BrowserWindow, screen, globalShortcut, ipcMain, desktopCapturer, clipboard } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const { transcribeAudio } = require('./gemini');
 
 let mainWindow = null;
@@ -131,6 +132,40 @@ function setupIpcHandlers() {
       return { success: true };
     } catch (error) {
       console.error('Clipboard error:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Handler for saving video and copying to clipboard
+  ipcMain.handle('save-and-copy-video', async (event, { data, mimeType }) => {
+    try {
+      // Determine file extension from MIME type
+      const ext = mimeType.includes('webm') ? 'webm' : 'mp4';
+
+      // Create recordings directory
+      const recordingsDir = path.join(app.getPath('userData'), 'recordings');
+      if (!fs.existsSync(recordingsDir)) {
+        fs.mkdirSync(recordingsDir, { recursive: true });
+      }
+
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = `recording-${timestamp}.${ext}`;
+      const filepath = path.join(recordingsDir, filename);
+
+      // Save video file
+      const buffer = Buffer.from(data);
+      fs.writeFileSync(filepath, buffer);
+      console.log('Video saved to:', filepath);
+
+      // Copy file to clipboard (macOS file URL format)
+      const fileUrl = `file://${filepath}`;
+      clipboard.writeBuffer('public.file-url', Buffer.from(fileUrl));
+      console.log('Video copied to clipboard');
+
+      return { success: true, filepath };
+    } catch (error) {
+      console.error('Save and copy video error:', error);
       return { success: false, error: error.message };
     }
   });
