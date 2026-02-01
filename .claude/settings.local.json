@@ -4,7 +4,14 @@
       "Bash(git checkout:*)",
       "Bash(npm install)",
       "Bash(npm run build:*)",
-      "Bash(git ls-tree:*)"
+      "Bash(git ls-tree:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: migrate VisionFlow to Electron\n\n- Remove Swift/Xcode project \\(DIP.xcodeproj, DIP folder\\)\n- Add Electron app shell with TypeScript\n- Create main process, preload script, and renderer UI\n- Implement dark theme with record/stop controls\n- Add source selector dropdown and process checkbox\n- UI state transitions \\(Ready → Recording → Processing → Done\\)\n\nNo recording logic yet - this is the frontend shell only.\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git mv:*)",
+      "Bash(git commit:*)",
+      "Bash(git add:*)",
+      "Bash(pkill:*)",
+      "Bash(open:*)"
     ]
   }
 }
