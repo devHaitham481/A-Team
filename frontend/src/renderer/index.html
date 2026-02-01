@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; media-src 'self' blob:">
   <title>VisionFlow</title>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -17,9 +17,6 @@
       <div class="source-selector">
         <select id="sourceSelect">
           <option value="" disabled selected>Select screen/window...</option>
-          <option value="screen-1">Screen 1</option>
-          <option value="screen-2">Screen 2</option>
-          <option value="window-1">Application Window</option>
         </select>
       </div>
 
