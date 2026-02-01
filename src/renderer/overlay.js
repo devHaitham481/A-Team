@@ -57,12 +57,11 @@ function parseMarkdown(text) {
   html = html.replace(/<\/ul>\n<ul>/g, '\n');
   html = html.replace(/<li class="numbered">/g, '<li>');
 
-  // Convert line breaks to <br> (but not after block elements)
-  html = html.replace(/\n(?!<)/g, '<br>\n');
+  // Only convert double line breaks to paragraph breaks (not single)
+  html = html.replace(/\n\n+/g, '<br><br>');
 
-  // Clean up extra <br> after block elements
-  html = html.replace(/(<\/(h[1-3]|pre|ul|ol|li)>)<br>/g, '$1');
-  html = html.replace(/<br>\n(<(h[1-3]|pre|ul|ol)>)/g, '\n$1');
+  // Remove single line breaks (let text flow naturally)
+  html = html.replace(/([^>])\n([^<])/g, '$1 $2');
 
   return html;
 }
