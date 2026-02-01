@@ -2,8 +2,13 @@ require('dotenv').config();
 const { app, BrowserWindow, screen, globalShortcut, ipcMain, desktopCapturer, clipboard } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const { execSync } = require('child_process');
+const { execSync, spawn } = require('child_process');
 const { transcribeAudio } = require('./gemini');
+
+// Gemini Live API server process
+let geminiLiveProcess = null;
+const GEMINI_LIVE_API_PORT = 8000;
+const GEMINI_LIVE_API_URL = `http://localhost:${GEMINI_LIVE_API_PORT}`;
 
 let mainWindow = null;
 let overlayWindow = null;
@@ -118,6 +123,60 @@ function closeOverlay() {
   if (overlayWindow && !overlayWindow.isDestroyed()) {
     overlayWindow.close();
     overlayWindow = null;
+  }
+}
+
+// Start the Gemini Live API server
+function startGeminiLiveServer() {
+  if (geminiLiveProcess) {
+    console.log('Gemini Live server already running');
+    return true;
+  }
+
+  const backendPath = path.join(__dirname, '..', 'mode-3-backend');
+  const apiPath = path.join(backendPath, 'api.py');
+
+  console.log('Starting Gemini Live API server...');
+  console.log('Backend path:', backendPath);
+
+  try {
+    geminiLiveProcess = spawn('python3', ['-m', 'uvicorn', 'api:app', '--host', '0.0.0.0', '--port', String(GEMINI_LIVE_API_PORT)], {
+      cwd: backendPath,
+      env: { ...process.env },
+      stdio: ['pipe', 'pipe', 'pipe']
+    });
+
+    geminiLiveProcess.stdout.on('data', (data) => {
+      console.log(`[Gemini Live] ${data}`);
+    });
+
+    geminiLiveProcess.stderr.on('data', (data) => {
+      console.log(`[Gemini Live] ${data}`);
+    });
+
+    geminiLiveProcess.on('close', (code) => {
+      console.log(`Gemini Live server exited with code ${code}`);
+      geminiLiveProcess = null;
+    });
+
+    geminiLiveProcess.on('error', (err) => {
+      console.error('Failed to start Gemini Live server:', err);
+      geminiLiveProcess = null;
+    });
+
+    return true;
+  } catch (error) {
+    console.error('Error starting Gemini Live server:', error);
+    return false;
+  }
+}
+
+// Stop the Gemini Live API server
+function stopGeminiLiveServer() {
+  if (geminiLiveProcess) {
+    console.log('Stopping Gemini Live server...');
+    geminiLiveProcess.kill('SIGTERM');
+    geminiLiveProcess = null;
   }
 }
 
@@ -255,6 +314,91 @@ function setupIpcHandlers() {
   ipcMain.on('close-overlay', () => {
     closeOverlay();
   });
+
+  // Handler for starting Gemini Live session
+  ipcMain.handle('start-gemini-live', async (event, { pushToTalk = false } = {}) => {
+    try {
+      // Start the server if not running
+      if (!geminiLiveProcess) {
+        startGeminiLiveServer();
+        // Wait for server to start
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+
+      // Call the API to start session
+      const response = await fetch(`${GEMINI_LIVE_API_URL}/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ push_to_talk: pushToTalk })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to start session');
+      }
+
+      const result = await response.json();
+      console.log('Gemini Live session started:', result.message);
+      return { success: true, message: result.message };
+    } catch (error) {
+      console.error('Error starting Gemini Live:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Handler for stopping Gemini Live session
+  ipcMain.handle('stop-gemini-live', async () => {
+    try {
+      const response = await fetch(`${GEMINI_LIVE_API_URL}/stop`, {
+        method: 'POST'
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to stop session');
+      }
+
+      const result = await response.json();
+      console.log('Gemini Live session stopped:', result.message);
+      return { success: true, message: result.message };
+    } catch (error) {
+      console.error('Error stopping Gemini Live:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Handler for getting Gemini Live status
+  ipcMain.handle('get-gemini-live-status', async () => {
+    try {
+      const response = await fetch(`${GEMINI_LIVE_API_URL}/status`);
+      if (!response.ok) {
+        return { is_running: false, mode: null };
+      }
+      return await response.json();
+    } catch (error) {
+      return { is_running: false, mode: null };
+    }
+  });
+
+  // Handler for toggling mute in Gemini Live
+  ipcMain.handle('toggle-gemini-live-mute', async () => {
+    try {
+      const response = await fetch(`${GEMINI_LIVE_API_URL}/toggle-mute`, {
+        method: 'POST'
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to toggle mute');
+      }
+
+      const result = await response.json();
+      return { success: true, message: result.message };
+    } catch (error) {
+      console.error('Error toggling mute:', error);
+      return { success: false, error: error.message };
+    }
+  });
 }
 
 // App lifecycle: ready
@@ -281,4 +425,5 @@ app.on('window-all-closed', () => {
 // Unregister all shortcuts when app is about to quit
 app.on('will-quit', () => {
   globalShortcut.unregisterAll();
+  stopGeminiLiveServer();
 });

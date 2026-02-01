@@ -6,10 +6,7 @@
 import {
   getScreenStream,
   startRecording as captureStartRecording,
-  stopRecording as captureStopRecording,
-  startLiveStream,
-  stopLiveStream,
-  sendFrame
+  stopRecording as captureStopRecording
 } from './capture.js';
 
 // State management
@@ -330,37 +327,59 @@ async function stopRecording() {
 }
 
 /**
- * Callback for handling live stream frames
- * @param {string} frameData - Base64 encoded frame data
+ * Set loading state on live button
+ * @param {boolean} loading
  */
-function handleLiveFrame(frameData) {
-  // Send each frame to the API (stub implementation)
-  sendFrame(frameData);
+function setLiveLoadingState(loading) {
+  if (liveButton) {
+    liveButton.setAttribute('data-loading', loading.toString());
+  }
 }
 
 /**
- * Start live mode using the capture module
+ * Start live mode using Gemini Live API
  */
 async function startLive() {
-  console.log('Starting live mode...');
+  console.log('Starting Gemini Live mode...');
+  setLiveLoadingState(true);
+
   try {
-    await startLiveStream(handleLiveFrame, 2000); // 2 second interval
-    console.log('Live mode started successfully');
+    const result = await window.electronAPI.startGeminiLive({ pushToTalk: false });
+
+    setLiveLoadingState(false);
+
+    if (result.success) {
+      console.log('Gemini Live started:', result.message);
+    } else {
+      console.error('Failed to start Gemini Live:', result.error);
+      isLive = false;
+      updateButtonState(liveButton, false);
+    }
   } catch (error) {
-    console.error('Failed to start live mode:', error);
-    // Reset state on failure
+    console.error('Failed to start Gemini Live:', error);
+    setLiveLoadingState(false);
     isLive = false;
     updateButtonState(liveButton, false);
   }
 }
 
 /**
- * Stop live mode using the capture module
+ * Stop live mode using Gemini Live API
  */
-function stopLive() {
-  console.log('Stopping live mode...');
-  stopLiveStream();
-  console.log('Live mode stopped');
+async function stopLive() {
+  console.log('Stopping Gemini Live mode...');
+
+  try {
+    const result = await window.electronAPI.stopGeminiLive();
+
+    if (result.success) {
+      console.log('Gemini Live stopped:', result.message);
+    } else {
+      console.error('Failed to stop Gemini Live:', result.error);
+    }
+  } catch (error) {
+    console.error('Failed to stop Gemini Live:', error);
+  }
 }
 
 /**

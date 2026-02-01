@@ -262,6 +262,22 @@ html, body {
   }
 }
 
+/* Live button - loading state */
+.live-button[data-loading="true"] {
+  background: rgba(80, 150, 80, 0.9);
+  border-color: rgba(100, 200, 100, 0.8);
+  box-shadow:
+    0 0 20px rgba(80, 150, 80, 0.6),
+    0 0 40px rgba(80, 150, 80, 0.3);
+  animation: loading-spin 1s linear infinite;
+  pointer-events: none;
+}
+
+.live-button[data-loading="true"] .button-icon {
+  color: rgba(255, 255, 255, 0.95);
+  animation: icon-pulse 0.5s ease-in-out infinite;
+}
+
 /* ==================== */
 /* ASK AI BUTTON STYLES */
 /* ==================== */

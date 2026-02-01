@@ -54,4 +54,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Show overlay window with AI response
   showOverlay: (data) => ipcRenderer.invoke('show-overlay', data),
+
+  // Gemini Live API controls
+  startGeminiLive: (options) => ipcRenderer.invoke('start-gemini-live', options),
+  stopGeminiLive: () => ipcRenderer.invoke('stop-gemini-live'),
+  getGeminiLiveStatus: () => ipcRenderer.invoke('get-gemini-live-status'),
+  toggleGeminiLiveMute: () => ipcRenderer.invoke('toggle-gemini-live-mute'),
 });
