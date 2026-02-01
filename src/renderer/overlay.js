@@ -48,8 +48,12 @@ function parseMarkdown(text) {
   // Bullet lists (- or *) - must be at start of line
   html = html.replace(/^[-*]\s+(.+)$/gm, '<li>$1</li>');
 
+  // Detect section headers: list items that are entirely bold (with optional colon)
+  // Convert <li><strong>Text:</strong></li> to <li class="section-header"><strong>Text:</strong></li>
+  html = html.replace(/<li><strong>([^<]+)<\/strong><\/li>/g, '<li class="section-header"><strong>$1</strong></li>');
+
   // Wrap consecutive <li> elements in <ul>
-  html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+  html = html.replace(/((?:<li[^>]*>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
 
   // Clean up: remove newlines inside <ul> tags
   html = html.replace(/<ul>([\s\S]*?)<\/ul>/g, (match, content) => {

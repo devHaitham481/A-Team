@@ -221,6 +221,22 @@ html, body {
   color: rgba(255, 255, 255, 0.9);
 }
 
+/* Section headers: bold list items that act as sub-headings */
+.response-text li.section-header {
+  list-style: none;
+  margin: 10px 0 4px -20px;
+  padding-left: 0;
+  font-size: 14px;
+}
+
+.response-text li.section-header:first-child {
+  margin-top: 4px;
+}
+
+.response-text li.section-header strong {
+  color: rgba(170, 150, 255, 0.95);
+}
+
 .response-text ul li::marker {
   color: rgba(150, 130, 255, 0.8);
 }
