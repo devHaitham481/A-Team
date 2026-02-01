@@ -6,7 +6,15 @@
       "Bash(npm install:*)",
       "Bash(pbpaste:*)",
       "Bash(osascript:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(node --check:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git fetch:*)",
+      "Bash(git merge:*)",
+      "Bash(pip3 install:*)",
+      "Bash(brew install:*)"
     ]
   }
 }
