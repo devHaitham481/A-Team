@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { app, BrowserWindow, screen, globalShortcut, ipcMain, desktopCapturer, clipboard } = require('electron');
+const { app, BrowserWindow, screen, globalShortcut, ipcMain, desktopCapturer, clipboard, Tray, Menu, nativeImage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { execSync, spawn } = require('child_process');
@@ -12,15 +12,16 @@ const GEMINI_LIVE_API_URL = `http://localhost:${GEMINI_LIVE_API_PORT}`;
 
 let mainWindow = null;
 let overlayWindow = null;
+let tray = null;
 
 function createWindow() {
   // Get primary display dimensions for positioning
   const primaryDisplay = screen.getPrimaryDisplay();
   const { height: screenHeight } = primaryDisplay.workAreaSize;
 
-  // Window dimensions for vertical pill
-  const windowWidth = 50;
-  const windowHeight = 250;
+  // Window dimensions for vertical pill (70% of original)
+  const windowWidth = 35;
+  const windowHeight = 175;
 
   // Position: left edge, vertically centered
   const xPosition = 0;
@@ -34,6 +35,7 @@ function createWindow() {
     frame: false,
     transparent: true,
     resizable: false,
+    movable: false,
     alwaysOnTop: true,
     skipTaskbar: true,
     hasShadow: false,
@@ -178,6 +180,76 @@ function stopGeminiLiveServer() {
     geminiLiveProcess.kill('SIGTERM');
     geminiLiveProcess = null;
   }
+}
+
+// Create menu bar tray icon
+function createTray() {
+  // Use an empty 1x1 transparent image and rely on title
+  const emptyIcon = nativeImage.createEmpty();
+
+  tray = new Tray(emptyIcon);
+  tray.setTitle('◉'); // Show a circle in the menu bar
+  tray.setToolTip('DipDip');
+
+  const modifier = process.platform === 'darwin' ? '⌘' : 'Ctrl';
+
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'DipDip',
+      enabled: false
+    },
+    { type: 'separator' },
+    {
+      label: 'Hotkeys',
+      enabled: false
+    },
+    {
+      label: `Record          ${modifier}+Shift+R`,
+      click: () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('toggle-record');
+        }
+      }
+    },
+    {
+      label: `Live               ${modifier}+Shift+L`,
+      click: () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('toggle-live');
+        }
+      }
+    },
+    {
+      label: `Ask AI            ${modifier}+Shift+A`,
+      click: () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('toggle-askai');
+        }
+      }
+    },
+    { type: 'separator' },
+    {
+      label: 'Show/Hide Pill',
+      click: () => {
+        if (mainWindow) {
+          if (mainWindow.isVisible()) {
+            mainWindow.hide();
+          } else {
+            mainWindow.show();
+          }
+        }
+      }
+    },
+    { type: 'separator' },
+    {
+      label: 'Quit DipDip',
+      click: () => {
+        app.quit();
+      }
+    }
+  ]);
+
+  tray.setContextMenu(contextMenu);
 }
 
 // Register global hotkeys
@@ -404,6 +476,7 @@ function setupIpcHandlers() {
 // App lifecycle: ready
 app.whenReady().then(() => {
   createWindow();
+  createTray();
   registerGlobalShortcuts();
   setupIpcHandlers();
 
