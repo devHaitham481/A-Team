@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'">
+  <title>AI Response</title>
+  <link rel="stylesheet" href="overlay.css">
+</head>
+<body>
+  <div class="overlay-container">
+    <div class="overlay-header">
+      <span class="overlay-title">AI Response</span>
+      <button class="close-button" id="closeBtn">&times;</button>
+    </div>
+    <div class="overlay-content" id="content">
+      <div class="loading-state" id="loadingState">
+        <div class="spinner"></div>
+        <span>Analyzing video...</span>
+      </div>
+      <div class="response-text" id="responseText"></div>
+    </div>
+  </div>
+  <script src="overlay.js"></script>
+</body>
+</html>

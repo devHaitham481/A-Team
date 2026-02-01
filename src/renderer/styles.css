@@ -23,7 +23,7 @@ html, body {
 /* Main pill container */
 .pill-container {
   width: 50px;
-  height: 180px;
+  height: 250px;
   border-radius: 25px;
   background: linear-gradient(
     180deg,
@@ -262,6 +262,98 @@ html, body {
   }
 }
 
+/* ==================== */
+/* ASK AI BUTTON STYLES */
+/* ==================== */
+
+/* Ask AI button - idle state */
+.askai-button {
+  background: rgba(60, 60, 100, 0.6);
+  border: 1px solid rgba(130, 100, 255, 0.2);
+}
+
+.askai-button .button-icon {
+  color: rgba(150, 130, 255, 0.5);
+}
+
+.askai-button:hover {
+  background: rgba(80, 70, 120, 0.7);
+  border-color: rgba(130, 100, 255, 0.3);
+}
+
+.askai-button:hover .button-icon {
+  color: rgba(150, 130, 255, 0.7);
+}
+
+/* Ask AI button - active state */
+.askai-button[data-active="true"] {
+  background: rgba(100, 80, 200, 0.9);
+  border-color: rgba(150, 130, 255, 0.8);
+  box-shadow:
+    0 0 20px rgba(100, 80, 200, 0.6),
+    0 0 40px rgba(100, 80, 200, 0.3);
+  animation: askai-pulse 1.5s ease-in-out infinite;
+}
+
+.askai-button[data-active="true"] .button-icon {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.askai-button[data-active="true"] .button-glow {
+  opacity: 1;
+  background: radial-gradient(
+    circle,
+    rgba(100, 80, 200, 0.4) 0%,
+    transparent 70%
+  );
+  animation: glow-pulse 1.5s ease-in-out infinite;
+}
+
+/* Ask AI pulse animation */
+@keyframes askai-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 20px rgba(100, 80, 200, 0.6),
+      0 0 40px rgba(100, 80, 200, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 25px rgba(100, 80, 200, 0.8),
+      0 0 50px rgba(100, 80, 200, 0.5);
+  }
+}
+
+/* Ask AI button - loading state */
+.askai-button[data-loading="true"] {
+  background: rgba(100, 80, 200, 0.9);
+  border-color: rgba(150, 130, 255, 0.8);
+  box-shadow:
+    0 0 20px rgba(100, 80, 200, 0.6),
+    0 0 40px rgba(100, 80, 200, 0.3);
+  animation: loading-spin 1s linear infinite;
+  pointer-events: none;
+}
+
+.askai-button[data-loading="true"] .button-icon {
+  color: rgba(255, 255, 255, 0.95);
+  animation: icon-pulse 0.5s ease-in-out infinite;
+}
+
+/* Ask AI button - success state */
+.askai-button[data-success="true"] {
+  background: rgba(80, 200, 80, 0.9);
+  border-color: rgba(120, 255, 120, 0.8);
+  box-shadow:
+    0 0 25px rgba(80, 200, 80, 0.8),
+    0 0 50px rgba(80, 200, 80, 0.4);
+  animation: success-pop 0.6s ease-out;
+  pointer-events: none;
+}
+
+.askai-button[data-success="true"] .button-icon {
+  color: rgba(255, 255, 255, 0.95);
+}
+
 /* Shared glow pulse animation */
 @keyframes glow-pulse {
   0%, 100% {
@@ -276,7 +368,8 @@ html, body {
 
 /* Hover effects when active */
 .record-button[data-active="true"]:hover,
-.live-button[data-active="true"]:hover {
+.live-button[data-active="true"]:hover,
+.askai-button[data-active="true"]:hover {
   transform: scale(1.05);
 }
 

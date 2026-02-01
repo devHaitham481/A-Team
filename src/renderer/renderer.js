@@ -15,11 +15,13 @@ import {
 // State management
 let isRecording = false;
 let isLive = false;
+let isAskAI = false;
 let lastRecordingBlob = null;
 
 // DOM element references
 let recordButton = null;
 let liveButton = null;
+let askaiButton = null;
 
 // Wait for DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', () => {
@@ -40,6 +42,7 @@ function initPill() {
   const pillContainer = document.querySelector('.pill-container');
   recordButton = document.querySelector('.record-button');
   liveButton = document.querySelector('.live-button');
+  askaiButton = document.querySelector('.askai-button');
 
   // Add subtle entrance animation
   pillContainer.style.opacity = '0';
@@ -72,6 +75,13 @@ function setupButtonHandlers() {
       toggleLive();
     });
   }
+
+  if (askaiButton) {
+    askaiButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleAskAI();
+    });
+  }
 }
 
 /**
@@ -88,6 +98,11 @@ function setupIPCListeners() {
     // Listen for toggle-live command from main process (via hotkey)
     window.electronAPI.receive('toggle-live', () => {
       toggleLive();
+    });
+
+    // Listen for toggle-askai command from main process (via hotkey)
+    window.electronAPI.receive('toggle-askai', () => {
+      toggleAskAI();
     });
   } else {
     console.log('electronAPI not available - IPC listeners not set up');
@@ -108,6 +123,12 @@ function toggleRecord() {
       stopLive();
       isLive = false;
       updateButtonState(liveButton, false);
+    }
+    // If Ask AI is active, stop it first
+    if (isAskAI) {
+      stopAskAI();
+      isAskAI = false;
+      updateButtonState(askaiButton, false);
     }
     // Start recording
     startRecording();
@@ -134,6 +155,12 @@ function toggleLive() {
       isRecording = false;
       updateButtonState(recordButton, false);
     }
+    // If Ask AI is active, stop it first
+    if (isAskAI) {
+      stopAskAI();
+      isAskAI = false;
+      updateButtonState(askaiButton, false);
+    }
     // Start live
     startLive();
     isLive = true;
@@ -142,6 +169,37 @@ function toggleLive() {
   // Update visual state
   updateButtonState(liveButton, isLive);
   console.log(`Live: ${isLive ? 'ON' : 'OFF'}`);
+}
+
+/**
+ * Toggle Ask AI mode
+ */
+function toggleAskAI() {
+  if (isAskAI) {
+    // Stop Ask AI recording and process
+    stopAskAI();
+    isAskAI = false;
+  } else {
+    // If recording is active, stop it first (mutually exclusive)
+    if (isRecording) {
+      stopRecording();
+      isRecording = false;
+      updateButtonState(recordButton, false);
+    }
+    // If live is active, stop it first
+    if (isLive) {
+      stopLive();
+      isLive = false;
+      updateButtonState(liveButton, false);
+    }
+    // Start Ask AI recording
+    startAskAI();
+    isAskAI = true;
+  }
+
+  // Update visual state
+  updateButtonState(askaiButton, isAskAI);
+  console.log(`Ask AI: ${isAskAI ? 'ON' : 'OFF'}`);
 }
 
 /**
@@ -306,13 +364,92 @@ function stopLive() {
 }
 
 /**
+ * Set loading state on Ask AI button
+ * @param {boolean} loading
+ */
+function setAskAILoadingState(loading) {
+  if (askaiButton) {
+    askaiButton.setAttribute('data-loading', loading.toString());
+  }
+}
+
+/**
+ * Show success state briefly on Ask AI button
+ */
+function showAskAISuccess() {
+  if (askaiButton) {
+    askaiButton.setAttribute('data-success', 'true');
+    setTimeout(() => {
+      askaiButton.setAttribute('data-success', 'false');
+    }, 1500);
+  }
+}
+
+/**
+ * Start Ask AI mode - begins recording
+ */
+async function startAskAI() {
+  console.log('Starting Ask AI recording...');
+  try {
+    await captureStartRecording();
+    console.log('Ask AI recording started successfully');
+  } catch (error) {
+    console.error('Failed to start Ask AI recording:', error);
+    isAskAI = false;
+    updateButtonState(askaiButton, false);
+  }
+}
+
+/**
+ * Stop Ask AI mode - stops recording and sends to Gemini, shows overlay
+ */
+async function stopAskAI() {
+  console.log('Stopping Ask AI recording...');
+  try {
+    const blob = await captureStopRecording();
+    console.log('Ask AI recording stopped, blob size:', blob.size);
+
+    // Show loading state on button
+    setAskAILoadingState(true);
+
+    // Show loading overlay
+    await window.electronAPI.showOverlay({ loading: true });
+
+    // Convert blob to base64 and send to Gemini
+    console.log('Sending to Gemini for analysis...');
+    const base64Data = await blobToBase64(blob);
+    const mimeType = blob.type.split(';')[0];
+    const result = await window.electronAPI.transcribe(base64Data, mimeType);
+
+    // Hide loading state
+    setAskAILoadingState(false);
+
+    if (result.success) {
+      console.log('Gemini response:', result.text);
+      // Update overlay with response
+      await window.electronAPI.showOverlay({ loading: false, text: result.text });
+      showAskAISuccess();
+    } else {
+      console.error('Gemini analysis failed:', result.error);
+      // Show error in overlay
+      await window.electronAPI.showOverlay({ loading: false, error: result.error });
+    }
+  } catch (error) {
+    console.error('Failed to stop Ask AI recording:', error);
+    setAskAILoadingState(false);
+    await window.electronAPI.showOverlay({ loading: false, error: error.message });
+  }
+}
+
+/**
  * Get current state
- * @returns {Object} Current state of recording and live modes
+ * @returns {Object} Current state of recording, live, and Ask AI modes
  */
 function getState() {
   return {
     isRecording,
-    isLive
+    isLive,
+    isAskAI
   };
 }
 
@@ -328,11 +465,14 @@ function getLastRecording() {
 window.dipDip = {
   toggleRecord,
   toggleLive,
+  toggleAskAI,
   getState,
   startRecording,
   stopRecording,
   startLive,
   stopLive,
+  startAskAI,
+  stopAskAI,
   getLastRecording,
   getScreenStream
 };

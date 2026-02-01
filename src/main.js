@@ -6,6 +6,7 @@ const { execSync } = require('child_process');
 const { transcribeAudio } = require('./gemini');
 
 let mainWindow = null;
+let overlayWindow = null;
 
 function createWindow() {
   // Get primary display dimensions for positioning
@@ -14,7 +15,7 @@ function createWindow() {
 
   // Window dimensions for vertical pill
   const windowWidth = 50;
-  const windowHeight = 180;
+  const windowHeight = 250;
 
   // Position: left edge, vertically centered
   const xPosition = 0;
@@ -59,6 +60,67 @@ function createWindow() {
   });
 }
 
+// Create overlay window for AI responses
+function createOverlayWindow() {
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.focus();
+    return overlayWindow;
+  }
+
+  const primaryDisplay = screen.getPrimaryDisplay();
+  const { width: screenWidth } = primaryDisplay.workAreaSize;
+
+  overlayWindow = new BrowserWindow({
+    width: 420,
+    height: 370,
+    x: 20,
+    y: 20,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    hasShadow: true,
+    webPreferences: {
+      preload: path.join(__dirname, 'overlay-preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+
+  overlayWindow.setAlwaysOnTop(true, 'screen-saver');
+  overlayWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  overlayWindow.loadFile(path.join(__dirname, 'renderer', 'overlay.html'));
+
+  overlayWindow.on('closed', () => {
+    overlayWindow = null;
+  });
+
+  return overlayWindow;
+}
+
+// Show overlay with content
+function showOverlay(data) {
+  const overlay = createOverlayWindow();
+  overlay.webContents.once('did-finish-load', () => {
+    overlay.webContents.send('overlay-content', data);
+  });
+  if (overlay.webContents.isLoading()) {
+    // Wait for load
+  } else {
+    overlay.webContents.send('overlay-content', data);
+  }
+  overlay.show();
+}
+
+// Close overlay window
+function closeOverlay() {
+  if (overlayWindow && !overlayWindow.isDestroyed()) {
+    overlayWindow.close();
+    overlayWindow = null;
+  }
+}
+
 // Register global hotkeys
 function registerGlobalShortcuts() {
   // Determine modifier based on platform (Cmd for macOS, Ctrl for Windows/Linux)
@@ -75,6 +137,13 @@ function registerGlobalShortcuts() {
   globalShortcut.register(`${modifier}+Shift+L`, () => {
     if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('toggle-live');
+    }
+  });
+
+  // Register toggle Ask AI hotkey: Cmd+Shift+A (macOS) or Ctrl+Shift+A (Windows/Linux)
+  globalShortcut.register(`${modifier}+Shift+A`, () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('toggle-askai');
     }
   });
 }
@@ -174,6 +243,17 @@ function setupIpcHandlers() {
       console.error('Save and copy video error:', error);
       return { success: false, error: error.message };
     }
+  });
+
+  // Handler for showing overlay with AI response
+  ipcMain.handle('show-overlay', async (event, data) => {
+    showOverlay(data);
+    return { success: true };
+  });
+
+  // Handler for closing overlay
+  ipcMain.on('close-overlay', () => {
+    closeOverlay();
   });
 }
 

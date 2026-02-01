@@ -14,7 +14,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Receive messages from main process
   receive: (channel, callback) => {
-    const validChannels = ['fromMain', 'toggle-record', 'toggle-live'];
+    const validChannels = ['fromMain', 'toggle-record', 'toggle-live', 'toggle-askai'];
     if (validChannels.includes(channel)) {
       // Deliberately strip event as it includes `sender`
       ipcRenderer.on(channel, (event, ...args) => callback(...args));
@@ -51,4 +51,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Save video and copy to clipboard
   saveAndCopyVideo: (data, mimeType) => ipcRenderer.invoke('save-and-copy-video', { data, mimeType }),
+
+  // Show overlay window with AI response
+  showOverlay: (data) => ipcRenderer.invoke('show-overlay', data),
 });
