@@ -1,0 +1,20 @@
+{
+  "name": "dipdip",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --enable-logging",
+    "prompt:1": "cp prompts/1-detailed-extractor.txt prompt.txt && echo 'Switched to: Detailed Extractor'",
+    "prompt:2": "cp prompts/2-narrative-flow.txt prompt.txt && echo 'Switched to: Narrative Flow'",
+    "prompt:3": "cp prompts/3-structured-sections.txt prompt.txt && echo 'Switched to: Structured Sections'",
+    "prompt:4": "cp prompts/4-ai-ready-context.txt prompt.txt && echo 'Switched to: AI-Ready Context'"
+  },
+  "devDependencies": {
+    "electron": "^34.0.0"
+  },
+  "dependencies": {
+    "@google/genai": "^1.39.0",
+    "dotenv": "^17.2.3"
+  }
+}

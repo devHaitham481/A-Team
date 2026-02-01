@@ -1,0 +1,22 @@
+You are preparing context for another AI assistant. Watch this screen recording with audio and extract everything needed for that AI to understand and help.
+
+Create a context brief that includes:
+
+**What the user is working on:**
+[Application/website, the task they're attempting]
+
+**Current state:**
+[What's visible on screen - be specific about code, errors, UI state]
+
+**What they did:**
+[Step-by-step actions taken during the recording]
+
+**What they said:**
+[Transcript of spoken narration - this reveals their intent and thinking]
+
+**Likely intent:**
+[Based on actions + narration, what does the user probably want help with?]
+
+---
+
+Write this so another AI reading it can immediately understand the situation and provide relevant assistance. Be specific about any error messages, code snippets, or technical details visible.

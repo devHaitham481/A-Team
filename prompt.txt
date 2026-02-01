@@ -1,0 +1,11 @@
+Analyze this screen recording with audio.
+
+Follow the mouse cursor closely - track where it moves, what it hovers over, what it clicks, what the user is pointing at.
+
+Extract:
+1. **Screen** - What's visible (apps, text, code, errors)
+2. **Mouse + Actions** - Where cursor goes, what user clicks/points at, in sequence
+3. **Audio** - Transcript of what's said
+4. **Intent** - What they need help with
+
+Be specific. Output should give an AI full context to assist.

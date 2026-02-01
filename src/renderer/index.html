@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'">
+  <title>DipDip</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="pill-container">
+    <div class="pill-content">
+      <!-- Record Button (Top) -->
+      <button class="mode-button record-button" data-mode="record" data-active="false">
+        <span class="button-icon">&#9210;</span>
+        <div class="button-glow"></div>
+      </button>
+
+      <!-- Divider -->
+      <div class="divider"></div>
+
+      <!-- Live Button (Bottom) -->
+      <button class="mode-button live-button" data-mode="live" data-active="false">
+        <span class="button-icon">&#9673;</span>
+        <div class="button-glow"></div>
+      </button>
+    </div>
+  </div>
+  <script type="module" src="renderer.js"></script>
+</body>
+</html>

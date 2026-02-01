@@ -1,0 +1,393 @@
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Transparent background for the window */
+html, body {
+  width: 100%;
+  height: 100%;
+  background: transparent !important;
+  background-color: transparent !important;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+}
+
+/* Main pill container */
+.pill-container {
+  width: 50px;
+  height: 180px;
+  border-radius: 25px;
+  background: linear-gradient(
+    180deg,
+    rgba(45, 45, 50, 0.92) 0%,
+    rgba(35, 35, 40, 0.95) 50%,
+    rgba(25, 25, 30, 0.98) 100%
+  );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 1px 0 rgba(255, 255, 255, 0.1) inset;
+
+  /* Enable dragging the entire pill */
+  -webkit-app-region: drag;
+
+  /* Flexbox for centering content */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  /* Ensure proper clipping */
+  overflow: hidden;
+}
+
+/* Subtle shine effect on the pill */
+.pill-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  border-radius: 25px 25px 0 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* Inner content area */
+.pill-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px 0;
+}
+
+/* Subtle divider line */
+.divider {
+  width: 20px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+}
+
+/* Mode buttons base styles */
+.mode-button {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(60, 60, 65, 0.8);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+
+  /* Make buttons clickable (not draggable) */
+  -webkit-app-region: no-drag;
+}
+
+.mode-button:focus {
+  outline: none;
+}
+
+.mode-button:hover {
+  transform: scale(1.1);
+}
+
+/* Button icon */
+.button-icon {
+  font-size: 16px;
+  line-height: 1;
+  transition: all 0.3s ease;
+  z-index: 2;
+  position: relative;
+}
+
+/* Button glow effect (hidden by default) */
+.button-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+/* ==================== */
+/* RECORD BUTTON STYLES */
+/* ==================== */
+
+/* Record button - idle state */
+.record-button {
+  background: rgba(80, 60, 60, 0.6);
+  border: 1px solid rgba(255, 100, 100, 0.2);
+}
+
+.record-button .button-icon {
+  color: rgba(255, 120, 120, 0.5);
+}
+
+.record-button:hover {
+  background: rgba(100, 70, 70, 0.7);
+  border-color: rgba(255, 100, 100, 0.3);
+}
+
+.record-button:hover .button-icon {
+  color: rgba(255, 120, 120, 0.7);
+}
+
+/* Record button - active state */
+.record-button[data-active="true"] {
+  background: rgba(255, 80, 80, 0.9);
+  border-color: rgba(255, 120, 120, 0.8);
+  box-shadow:
+    0 0 20px rgba(255, 80, 80, 0.6),
+    0 0 40px rgba(255, 80, 80, 0.3);
+  animation: record-pulse 1.5s ease-in-out infinite;
+}
+
+.record-button[data-active="true"] .button-icon {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.record-button[data-active="true"] .button-glow {
+  opacity: 1;
+  background: radial-gradient(
+    circle,
+    rgba(255, 80, 80, 0.4) 0%,
+    transparent 70%
+  );
+  animation: glow-pulse 1.5s ease-in-out infinite;
+}
+
+/* Record pulse animation */
+@keyframes record-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 20px rgba(255, 80, 80, 0.6),
+      0 0 40px rgba(255, 80, 80, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 25px rgba(255, 80, 80, 0.8),
+      0 0 50px rgba(255, 80, 80, 0.5);
+  }
+}
+
+/* ================== */
+/* LIVE BUTTON STYLES */
+/* ================== */
+
+/* Live button - idle state */
+.live-button {
+  background: rgba(60, 80, 60, 0.6);
+  border: 1px solid rgba(100, 255, 100, 0.2);
+}
+
+.live-button .button-icon {
+  color: rgba(120, 255, 120, 0.5);
+}
+
+.live-button:hover {
+  background: rgba(70, 100, 70, 0.7);
+  border-color: rgba(100, 255, 100, 0.3);
+}
+
+.live-button:hover .button-icon {
+  color: rgba(120, 255, 120, 0.7);
+}
+
+/* Live button - active state */
+.live-button[data-active="true"] {
+  background: rgba(80, 200, 80, 0.9);
+  border-color: rgba(120, 255, 120, 0.8);
+  box-shadow:
+    0 0 20px rgba(80, 200, 80, 0.6),
+    0 0 40px rgba(80, 200, 80, 0.3);
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+.live-button[data-active="true"] .button-icon {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.live-button[data-active="true"] .button-glow {
+  opacity: 1;
+  background: radial-gradient(
+    circle,
+    rgba(80, 200, 80, 0.4) 0%,
+    transparent 70%
+  );
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Live pulse animation */
+@keyframes live-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 20px rgba(80, 200, 80, 0.6),
+      0 0 40px rgba(80, 200, 80, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 25px rgba(80, 200, 80, 0.8),
+      0 0 50px rgba(80, 200, 80, 0.5);
+  }
+}
+
+/* Shared glow pulse animation */
+@keyframes glow-pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.3);
+    opacity: 1;
+  }
+}
+
+/* Hover effects when active */
+.record-button[data-active="true"]:hover,
+.live-button[data-active="true"]:hover {
+  transform: scale(1.05);
+}
+
+/* ===================== */
+/* LOADING STATE STYLES  */
+/* ===================== */
+
+/* Record button - loading/processing state */
+.record-button[data-loading="true"] {
+  background: rgba(80, 120, 200, 0.9);
+  border-color: rgba(100, 150, 255, 0.8);
+  box-shadow:
+    0 0 20px rgba(80, 120, 200, 0.6),
+    0 0 40px rgba(80, 120, 200, 0.3);
+  animation: loading-spin 1s linear infinite;
+  pointer-events: none;
+}
+
+.record-button[data-loading="true"] .button-icon {
+  color: rgba(255, 255, 255, 0.95);
+  animation: icon-pulse 0.5s ease-in-out infinite;
+}
+
+.record-button[data-loading="true"] .button-glow {
+  opacity: 1;
+  background: radial-gradient(
+    circle,
+    rgba(80, 120, 200, 0.4) 0%,
+    transparent 70%
+  );
+}
+
+/* Loading spin animation */
+@keyframes loading-spin {
+  0% {
+    box-shadow:
+      0 0 20px rgba(80, 120, 200, 0.6),
+      0 0 40px rgba(80, 120, 200, 0.3),
+      inset 0 0 0 2px rgba(255, 255, 255, 0.3);
+  }
+  25% {
+    box-shadow:
+      0 0 20px rgba(100, 150, 255, 0.8),
+      0 0 40px rgba(100, 150, 255, 0.4),
+      inset 0 0 0 2px rgba(255, 255, 255, 0.5);
+  }
+  50% {
+    box-shadow:
+      0 0 25px rgba(80, 120, 200, 0.9),
+      0 0 50px rgba(80, 120, 200, 0.5),
+      inset 0 0 0 2px rgba(255, 255, 255, 0.3);
+  }
+  75% {
+    box-shadow:
+      0 0 20px rgba(100, 150, 255, 0.8),
+      0 0 40px rgba(100, 150, 255, 0.4),
+      inset 0 0 0 2px rgba(255, 255, 255, 0.5);
+  }
+  100% {
+    box-shadow:
+      0 0 20px rgba(80, 120, 200, 0.6),
+      0 0 40px rgba(80, 120, 200, 0.3),
+      inset 0 0 0 2px rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes icon-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ===================== */
+/* SUCCESS STATE STYLES  */
+/* ===================== */
+
+/* Record button - success state (copied to clipboard) */
+.record-button[data-success="true"] {
+  background: rgba(80, 200, 80, 0.9);
+  border-color: rgba(120, 255, 120, 0.8);
+  box-shadow:
+    0 0 25px rgba(80, 200, 80, 0.8),
+    0 0 50px rgba(80, 200, 80, 0.4);
+  animation: success-pop 0.6s ease-out;
+  pointer-events: none;
+}
+
+.record-button[data-success="true"] .button-icon {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.record-button[data-success="true"] .button-glow {
+  opacity: 1;
+  background: radial-gradient(
+    circle,
+    rgba(80, 200, 80, 0.5) 0%,
+    transparent 70%
+  );
+}
+
+/* Success pop animation */
+@keyframes success-pop {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.3);
+  }
+  60% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}

@@ -1,0 +1,33 @@
+Analyze this screen recording with audio. Provide a structured breakdown.
+
+---
+
+## Timeline
+List each significant moment with timestamp approximation:
+- [0:00] Description of what's happening
+- [0:05] Next significant event
+...
+
+## Screen Contents
+What applications/websites are shown:
+-
+
+Visible text, code, or data:
+-
+
+UI state (buttons, menus, any errors or messages):
+-
+
+## Actions Taken
+Step-by-step what the user does:
+1.
+2.
+3.
+
+## Audio Transcript
+Exact transcription of spoken words:
+
+
+## Key Observations
+Notable details that provide important context:
+-

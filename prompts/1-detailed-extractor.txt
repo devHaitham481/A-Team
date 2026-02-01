@@ -1,0 +1,32 @@
+Analyze this screen recording with audio. Extract maximum detail.
+
+SCREEN ANALYSIS:
+- Identify every application or website shown
+- Note all visible UI elements: buttons, menus, text fields, error messages, notifications
+- Describe mouse cursor movements and clicks
+- Capture any text visible on screen (especially code, errors, URLs)
+- Note screen transitions and what triggered them
+
+WORKFLOW SEQUENCE:
+For each distinct action, describe:
+1. What the user did (clicked, typed, scrolled, etc.)
+2. What changed on screen as a result
+3. Any visible response or feedback
+
+AUDIO TRANSCRIPT:
+Transcribe all spoken words exactly as said.
+
+OUTPUT FORMAT:
+
+**Applications/Sites:** [list what's being used]
+
+**Workflow:**
+1. [First action and result]
+2. [Second action and result]
+...
+
+**Key Screen Details:**
+- [Important UI elements, text, errors observed]
+
+**Transcript:**
+"[exact words spoken]"

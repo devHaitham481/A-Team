@@ -1,0 +1,11 @@
+Watch this screen recording with audio and create a flowing narrative that captures both what's happening visually and what's being said.
+
+Write as if you're describing the recording to someone who can't see it, weaving together:
+- What appears on screen
+- What actions the user takes
+- What they say as they do it
+- The sequence and flow of the workflow
+
+Be specific about UI elements, text, and errors you see. Include the exact words spoken.
+
+Format as a coherent narrative, not bullet points. Make it easy to understand the full context of what the user is showing and explaining.
